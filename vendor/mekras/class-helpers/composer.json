@@ -1,0 +1,28 @@
+{
+    "name": "mekras/class-helpers",
+    "description": "Some common helpers for PHP classes ",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Михаил Красильников",
+            "email": "m.krasilnikov@yandex.ru"
+        }
+    ],
+    "require": {
+        "php": ">=5.5"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^4.8.26",
+        "satooshi/php-coveralls": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mekras\\ClassHelpers\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Mekras\\ClassHelpers\\Tests\\": "tests/"
+        }
+    }
+}
