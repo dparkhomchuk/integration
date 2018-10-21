@@ -16,6 +16,7 @@ require_once __DIR__ . '/includes/landing-type.php';
 require_once __DIR__ . '/includes/load-bpmonline-settings.php';
 require_once __DIR__ . '/includes/contactform7-script-builder.php';
 require_once __DIR__ . '/includes/bpmonline-integration.php';
+require_once __DIR__ . '/includes/settings/bpmonline-formidableforms-mapping.php';
 
 register_activation_hook( __FILE__, 'bpmonlineplugin_activate' );
 
@@ -44,7 +45,7 @@ function frm_add_new_settings_tab( $sections, $values ) {
 		'name'		=> 'Bpm\'online fields mapping',
 		'anchor'	=> 'new_tab_name',
 		'function'	=> 'get_my_new_settings',
-		/*'class'	=> 'YourClassNamewHere'*/
+		'class'	=> 'BpmonlineFormidableformsMapping'
 	);
 	return $sections;
 }
