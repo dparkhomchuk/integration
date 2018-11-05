@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/base-entity.php';
 require_once __DIR__ . '/landing-type.php';
 require_once __DIR__ . '/landing-page.php';

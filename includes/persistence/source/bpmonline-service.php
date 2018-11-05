@@ -13,7 +13,7 @@ use Mekras\OData\Client\OData;
 use Mekras\OData\Client\Service;
 use Mekras\OData\Client\URI\Uri;
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ .'/entity-collection.php';
 require_once __DIR__ .'/entity-column.php';
 

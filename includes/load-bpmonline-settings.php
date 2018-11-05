@@ -50,48 +50,6 @@ function wpcf7_editor_panel_bpmonline_settings ( $post) {
 	<?php echo(wpc7_editor_panel_bpmonline_script($script));
 }
 
-function wpc7_editor_panel_bpmonline_script($structure) {
-	?>
-    <script><?php echo($structure) ?>
-
-        jQuery('[name = bpmonline_landing_type_id]').change(handle_landing_type_change);
-        function handle_landing_type_change(event) {
-            jQuery('[name = bpmonline_landing_id]').empty();
-            jQuery('[name *= "_bpmmapping"]').empty();
-            var selectedValue = jQuery(event.currentTarget).val();
-            var selectedType = Terrasoft[selectedValue];
-            var selectedTypeLandings = selectedType.LandingPages;
-            var selectedTypeLandingsValues = [];
-            for(var id in selectedTypeLandings) {
-                var selectedLanding = selectedTypeLandings[id];
-                selectedTypeLandingsValues.push({Id: selectedLanding.Id, Name: selectedLanding.Name});
-            }
-            fillSelect('[name = bpmonline_landing_id]', selectedTypeLandingsValues);
-            var selectedLangingFields = selectedType.EntitySchemaFields;
-            fillTypedSelect('[name *= "_bpmmapping"]', selectedLangingFields);
-        }
-        function fillSelect(selector, values) {
-            jQuery(selector).each(function(index, element) {
-                jQuery.each(values, function() {
-                    jQuery(element).append(jQuery("<option />").val(this.Id ? this.Id : this).text(this.Name ? this.Name : this));
-                });
-            });
-        }
-        function fillTypedSelect(selector, values) {
-            jQuery(selector).each(function(index, element) {
-                var jElement = jQuery(element);
-                var elementType = jElement.data('type');
-                var typedValues = values[elementType];
-                jQuery.each(typedValues, function() {
-                    jQuery(element).append(jQuery("<option />").val(this.Id ? this.Id : this).text(this.Name ? this.Name : this));
-                });
-            });
-        }
-
-    </script>
-	<?php
-}
-
 function get_bpmonline_tags($tags) {
 	$bpmonlineTags = [];
 	foreach($tags as $tag) {

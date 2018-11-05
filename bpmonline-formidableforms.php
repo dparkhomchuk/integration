@@ -8,14 +8,13 @@
    */
 
 require_once __DIR__ . '/includes/bpmonline-script-builder.php';
-require_once __DIR__ . '/includes/bpmonline-service.php';
-require_once __DIR__ . '/includes/bpmonline-structure-builder.php';
-require_once __DIR__ . '/includes/base-entity.php';
-require_once __DIR__ . '/includes/landing-page.php';
-require_once __DIR__ . '/includes/landing-type.php';
+require_once __DIR__ . '/includes/persistence/source/bpmonline-service.php';
+require_once __DIR__ . '/includes/persistence/source/bpmonline-structure-builder.php';
+require_once __DIR__ . '/includes/persistence/source/base-entity.php';
+require_once __DIR__ . '/includes/persistence/source/landing-page.php';
+require_once __DIR__ . '/includes/persistence/source/landing-type.php';
 require_once __DIR__ . '/includes/load-bpmonline-settings.php';
-require_once __DIR__ . '/includes/contactform7-script-builder.php';
-require_once __DIR__ . '/includes/bpmonline-integration.php';
+require_once __DIR__ . '/includes/persistence/source/bpmonline-integration.php';
 require_once __DIR__ . '/includes/settings/bpmonline-formidableforms-mapping.php';
 
 register_activation_hook( __FILE__, 'bpmonlineplugin_activate' );
@@ -49,6 +48,23 @@ function frm_add_new_settings_tab( $sections, $values ) {
 	);
 	return $sections;
 }
+
+add_filter('frm_form_options_before_update', 'frm_update_my_form_option', 20, 2);
+
+function frm_update_my_form_option( $options, $values ){
+	$opt = (array)get_option('frm_myoptname');
+	if ( isset( $values['frm_myoptname'] ) && ( ! isset($values['id'] ) || !in_array( $values['id'], $opt ) ) ) {
+		$opt[] = $values['id'];
+		update_option('frm_myoptname', $opt);
+	} else if ( ! isset( $values['frm_myoptname'] ) && isset( $values['id'] ) && in_array( $values['id'], $opt ) ) {
+		$pos = array_search( $values['id'], $opt );
+		unset( $opt[$pos] );
+		update_option('frm_myoptname', $opt);
+	}
+
+	return $options;
+}
+
 function get_my_new_settings( $values ) {
 	$form_fields = FrmField::getAll('fi.form_id='. (int) $values['id'] ." and fi.type not in ('break', 'divider', 'html', 'captcha', 'form')", 'field_order');
 	$my_form_opts = maybe_unserialize( get_option('frm_mysettings_' . $values['id']) );
