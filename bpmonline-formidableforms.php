@@ -35,9 +35,6 @@ function bpmonlineplugin_uninstall() {
 
 add_action( 'init', 'bpmonline_init' );
 add_action( 'admin_menu','bpmonline_admin_init', 20 );
-add_action('frm_additional_form_options', 'frm_add_new_form_opt', 10, 1 );
-
-
 add_filter('frm_add_form_settings_section', 'frm_add_new_settings_tab', 10, 2);
 function frm_add_new_settings_tab( $sections, $values ) {
 	$sections[] = array(
@@ -52,14 +49,55 @@ function frm_add_new_settings_tab( $sections, $values ) {
 add_filter('frm_form_options_before_update', 'frm_update_my_form_option', 20, 2);
 
 function frm_update_my_form_option( $options, $values ){
-	$opt = (array)get_option('frm_myoptname');
-	if ( isset( $values['frm_myoptname'] ) && ( ! isset($values['id'] ) || !in_array( $values['id'], $opt ) ) ) {
-		$opt[] = $values['id'];
-		update_option('frm_myoptname', $opt);
-	} else if ( ! isset( $values['frm_myoptname'] ) && isset( $values['id'] ) && in_array( $values['id'], $opt ) ) {
-		$pos = array_search( $values['id'], $opt );
-		unset( $opt[$pos] );
-		update_option('frm_myoptname', $opt);
+	if ( isset( $values['bpmonline_landing_id'] ) ) {
+		$bpmOnlineUrl           = get_option( 'bpmonline_url' );
+		$bpmOnlineAuthorization = get_option( 'bpmonline_authorization' );
+		if ( null !== $bpmOnlineUrl && null !== $bpmOnlineAuthorization ) {
+			$service                                      = new BPMOnlineService( $bpmOnlineUrl, $bpmOnlineAuthorization );
+			$bpmonlineintegration_params                  = [];
+			$bpmonlineintegration_params['landingid']     = $values['bpmonline_landing_id'];
+			$landingTypeId                                = $values['bpmonline_landing_type_id'];
+			$bpmonlineintegration_params['landingtypeid'] = $landingTypeId;
+			$fields                                       = [];
+			foreach ( $values as $key => $value ) {
+				if ( preg_match( '@_bpmmapping@', $key ) ) {
+					$bpmonlineintegration_params[ $key ] = $value;
+					array_push( $fields, $value );
+				}
+			}
+			$form_fields = FrmField::getAll('fi.form_id='. (int) $values['id'] ." and fi.type not in ('break', 'divider', 'html', 'captcha', 'form')", 'field_order');
+
+			$metadata       = $service->getMetadata();
+			$metadataParser = new MetadataParser();
+			$landingType    = $service->getLandingType( $landingTypeId );
+			$shemaName      = $landingType->get_name();
+			if ( $shemaName == "Event participant" ) {
+				$shemaName = "Contact";
+			}
+			$entitySchema                           = $metadataParser->getEntitySchema( $metadata, $shemaName );
+			$lookupValues                           = $service->getLookupValues( $entitySchema, $fields );
+			foreach ($form_fields as $value) {
+				if ($value -> type == "select") {
+				    $mappingKey = $value->name . "_bpmmapping";
+				    $columnName = $bpmonlineintegration_params[$mappingKey];
+				    foreach ($lookupValues as $lookupValue) {
+				        if ($lookupValue -> getName() == $columnName) {
+					        $id = $value -> id;
+					        $values = [];
+					        $entities = $lookupValue->getEntities();
+					        $names = [];
+					        foreach($entities as $entity) {
+					            array_push($names, $entity -> get_name());
+                            }
+					        $values['options'] = $names;
+					        FrmField::update($id, $values);
+                        }
+                    }
+                }
+			}
+			$bpmonlineintegration_params['lookups'] = $lookupValues;
+			update_option( $values['id'] . "_bpmonlineintegration", $bpmonlineintegration_params );
+		}
 	}
 
 	return $options;
@@ -109,7 +147,7 @@ function bpmonline_init() {
 
 function bpmonline_admin_init() {
 	if ( function_exists('add_submenu_page') ){
-		$page = add_submenu_page('wpcf7', 'Forms: Bpmonline Integration', 'Bpmonline integration setup',
+		$page = add_submenu_page('formidable', 'Forms: Bpmonline Integration', 'Bpmonline integration setup',
 			'manage_options',
                basename(__FILE__,'.php').'-config',
                 'my_submenu_config');
@@ -118,6 +156,19 @@ function bpmonline_admin_init() {
 
 function my_submenu_config(){
 	include_once(dirname(__FILE__).'/includes/plugin-ui.php');
+}
+
+
+add_action('frm_after_create_entry', 'yourfunctionname', 30, 2);
+function yourfunctionname($entry_id, $form_id){
+	if($form_id == 5){ //replace 5 with the id of the form
+		$args = array();
+		if(isset($_POST['item_meta'][30])) //replace 30 and 31 with the appropriate field IDs from your form
+			$args['data1'] = $_POST['item_meta'][30]; //change 'data1' to the named parameter to send
+		if(isset($_POST['item_meta'][31]))
+			$args['data2'] = $_POST['item_meta'][31]; //change 'data2' to whatever you need
+		$result = wp_remote_post('http://example.com', array('body' => $args));
+	}
 }
 
 
@@ -173,7 +224,9 @@ add_action( 'wp_ajax_nopriv_get_bpmonline_mappings', 'get_contact_form_mapping' 
 
 function addBpmonlineMappingScript() {
 	?>
-    <div style="display: none;" id="bpmonline_mapping_placeholder"></div>
+    <div style="display: none;" id="bpmonline_mapping_placeholder">
+
+    </div>
     <script src="https://webtracking-v01.bpmonline.com/JS/track-cookies.js"></script>
     <script src="https://webtracking-v01.bpmonline.com/JS/create-object.js"></script>
     <script type="text/javascript">
@@ -185,20 +238,6 @@ function addBpmonlineMappingScript() {
                     jQuery(element).append(jQuery("<option />").val(this.Id ? this.Id : this).text(this.Name ? this.Name : this));
                 });
             });
-        }
-        for (var i=0; i< contactForms.length; i++) {
-            var contactForm = contactForms[i];
-            var contactFormId = contactForm.id;
-            jQuery.post(
-                rootUrl,
-                {
-                    'action': 'get_bpmonline_mappings',
-                    'data':   contactFormId
-                },
-                function(response){
-                    jQuery('#bpmonline_mapping_placeholder').html(response);
-                }
-            );
         }
     </script>
     <?php

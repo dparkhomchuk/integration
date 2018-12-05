@@ -81,6 +81,9 @@ function wpc7_editor_get_bpm_type_from_string($tagTypeString) {
 			return "Edm.String";
 		case "tel":
 			return "Edm.String";
+
+		case "phone":
+			return "Edm.String";
 		case "number":
 			return "Edm.Int32";
 		case "date":
@@ -88,6 +91,8 @@ function wpc7_editor_get_bpm_type_from_string($tagTypeString) {
 		case "textarea":
 			return "Edm.String";
 		case "select":
+			return "Edm.Guid";
+		case "dropdown":
 			return "Edm.Guid";
 		case "checkboxes":
 			return "";
@@ -102,6 +107,8 @@ function wpc7_editor_get_bpm_type_from_string($tagTypeString) {
 		case "file":
 			return "";
 		case "submit":
+			return "";
+		case "hidden":
 			return "";
 		default:
 			return "";

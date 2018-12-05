@@ -21,7 +21,7 @@
         }
     }
 
-    require_once __DIR__ . '/bpmonline-service.php';
+    require_once __DIR__ . '/persistence/source/bpmonline-service.php';
 
 	if( isset($_POST['url'])) {
 	    $url = $_POST['url'];
@@ -36,19 +36,19 @@
 			$result = $httpClient->request('POST',$url . "/ServiceModel/AuthService.svc/Login",  $options);
 			$resultBody = (string)$result->getBody();
 			if (strpos($resultBody,"\"Message\":\"Invalid username or password specified.") == false) {
-				$licenceurl = 'http://www.licenseengine.com/licenses/a/?action=check_license&item_name=bpmonline-landings.zip&product_id=BpmonlineWordpressIntegration&license='.$licence."&domain=".$_SERVER['SERVER_NAME'];
+				/*$licenceurl = 'http://www.licenseengine.com/licenses/a/?action=check_license&item_name=bpmonline-landings.zip&product_id=BpmonlineWordpressIntegration&license='.$licence."&domain=".$_SERVER['SERVER_NAME'];
 				$licenceResult = $httpClient->request('GET',$licenceurl);
 				$licenceResultBody = (string)$licenceResult->getBody();
 				$obj = json_decode($licenceResultBody);
 				if(empty($obj) OR $obj->license!='valid') {
 					echo '<div id="message" class="error"><p><strong>' . __('Invalid license.') . '</strong></p></div>';
-                } else {
+                } else {*/
 					update_option('bpmonline_url', $url);
 					update_option('bpmonline_login', $login);
 					update_option('bpmonline_authorization', $authorization);
                     update_option('bpmonline_licence', $licence);
 					echo '<div id="message" class="updated fade"><p><strong>' . __('Settings saved.') . '</strong></p></div>';
-                }
+                //}
             } else {
 				echo '<div id="message" class="error"><p><strong>' . __('Incorrect bpm\'online credentails.') . '</strong></p></div>';
             }
