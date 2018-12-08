@@ -1,4 +1,4 @@
-\<?php
+<?php
 /**
  * Created by PhpStorm.
  * User: Dmytro
@@ -54,7 +54,7 @@ class BpmonlineFormidableformsMapping
                         <label style="height: 22px; padding-top:2px; padding-bottom:2px;display:inline-block"><?php echo($form_field->name)?></label>
                     </td>
                     <td>
-                        <select name="<?php echo($form_field->name)?>_bpmmapping" data-type=<?php echo(wpc7_editor_get_bpm_type_from_string($form_field->type))?>>
+                        <select name="<?php echo($form_field->field_key)?>_bpmmapping" data-type=<?php echo(wpc7_editor_get_bpm_type_from_string($form_field->type))?>>
                         </select>
                     </td>
                  </tr>
