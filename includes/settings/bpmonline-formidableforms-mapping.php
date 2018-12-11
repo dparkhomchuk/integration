@@ -11,8 +11,11 @@ class BpmonlineFormidableformsMapping
 	public static function get_my_new_settings ($values) {
 		$form_fields = FrmField::getAll('fi.form_id='. (int) $values['id'] ." and fi.type not in ('break', 'divider', 'html', 'captcha', 'form')", 'field_order');
 		$my_form_opts = maybe_unserialize( get_option('frm_mysettings_' . $values['id']) );
-        $bpmOnlineUrl='https://mkpdev-flexentric.bpmonline.com';
-		$bpmOnlineAuthorization = 'U3VwZXJ2aXNvcjpaSFdlUmhOU0RSYmVBdTVtSHE=';
+        $bpmOnlineUrl=get_option('bpmonline_url');
+		$bpmOnlineAuthorization = get_option('bpmonline_authorization');
+		$selectedMapping = get_option($values['id']. "_bpmonlineintegration");
+ 		$selectedMappingType = $selectedMapping == null ? null : $selectedMapping['landingtypeid'];
+ 		$selectedLanding = $selectedMapping == null ? null : $selectedMapping["landingid"];
 		$bpmOnlineService = new BPMOnlineService($bpmOnlineUrl, $bpmOnlineAuthorization);
 		$bpmonline_entity_structure_builder = new BPMOnlineEntityStructureBuilder($bpmOnlineService);
 		$bpmonline_data_structure = $bpmonline_entity_structure_builder -> buildStructure();
@@ -21,6 +24,8 @@ class BpmonlineFormidableformsMapping
 		$bpmonlineData -> set_landing_types($bpmonline_data_structure -> getLandingTypes());
 		$bpmonlineData -> set_structure_script($structure_script);
 		$landingTypes = $bpmonlineData -> get_landing_types();
+		$selectedlLandings = $selectedMappingType == null ? null : $bpmonlineData -> getLandings($selectedMappingType);
+		$selectedFields = $selectedMappingType == null ? [] : $bpmonlineData->get_entitySchemas($selectedMappingType);
 		?>
 		<table class="form-table">
 			<tr>
@@ -31,7 +36,7 @@ class BpmonlineFormidableformsMapping
                     <select name="bpmonline_landing_type_id" onchange="handle_landing_type_change();">
 						<?php
 						foreach ($landingTypes as $landingType) {
-							?><option value="<?php echo($landingType->get_id())?>"><?php echo($landingType->get_name())?></option>
+							?><option value="<?php echo($landingType->get_id())?>" <?php if($landingType -> get_id() == $selectedMappingType) echo("selected=\"selected\""); ?>><?php echo($landingType->get_name())?></option>
 							<?php
 						}
 						?>
@@ -43,8 +48,15 @@ class BpmonlineFormidableformsMapping
                     <label style="height: 22px; padding-top:2px; padding-bottom:2px;display:inline-block">Select landing.</label>
                 </td>
                 <td>
-                    <select name="bpmonline_landing_id">
-                    </select>
+					<?php if($selectedlLandings == null) {
+						?> <select name="bpmonline_landing_id"></select> <?php
+					} else {
+						?><select name="bpmonline_landing_id"><?php
+						foreach ($selectedlLandings as $landing) {
+							?><option value="<?php echo($landing->get_id());?>" <?php if ($selectedLanding == $landing -> get_id()) { echo("selected=\"selected\""); } ?>><?php echo($landing->get_name());?></option><?php
+						} ?>
+                        </select>
+					<?php }?>
                 </td>
             </tr>
             <?php
@@ -54,8 +66,19 @@ class BpmonlineFormidableformsMapping
                         <label style="height: 22px; padding-top:2px; padding-bottom:2px;display:inline-block"><?php echo($form_field->name)?></label>
                     </td>
                     <td>
-                        <select name="<?php echo($form_field->field_key)?>_bpmmapping" data-type=<?php echo(wpc7_editor_get_bpm_type_from_string($form_field->type))?>>
-                        </select>
+                        <?php if ($selectedMapping == null) {
+                            ?>
+                            <select name="<?php echo($form_field->field_key)?>_bpmmapping" data-type=<?php echo(wpc7_editor_get_bpm_type_from_string($form_field->type))?>>
+                            </select>
+                        <?php } else { ?>
+	                        <select name="<?php echo($form_field->field_key)?>_bpmmapping" data-type=<?php echo(wpc7_editor_get_bpm_type_from_string($form_field->type))?>>
+                                <?php
+                                    $bpmfields = $selectedFields[wpc7_editor_get_bpm_type_from_string($form_field->type)];
+                                    foreach ($bpmfields as $bpmfield) {
+                                ?><option value="<?php echo($bpmfield);?>" <?php if($selectedMapping[$form_field->field_key]==$bpmfield) echo("selected=\"selected\""); ?>><?php echo($bpmfield);?> </option>
+                                    <?php }?>
+                            </select>
+                        <?php }?>
                     </td>
                  </tr>
 

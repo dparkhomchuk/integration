@@ -66,10 +66,12 @@ class LandingType extends BaseEntity
 		$json_fields = $json_fields . ",";
 		$json_fields = $json_fields . "\"LandingPages\":{";
 		$landings_count = 0;
-		foreach ($this -> landings as $landing) {
-			$json_fields = $json_fields . "\"".strval($landing -> get_id()) . "\":";
-			$json_fields = $json_fields . strval($landing -> getJSON()) . ",";
-			$landings_count++;
+		if ($this -> landings != null) {
+			foreach ($this -> landings as $landing) {
+				$json_fields = $json_fields . "\"".strval($landing -> get_id()) . "\":";
+				$json_fields = $json_fields . strval($landing -> getJSON()) . ",";
+				$landings_count++;
+			}
 		}
 		if ($landings_count) {
 			$json_fields = substr($json_fields, 0, -1);
