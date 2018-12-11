@@ -18,14 +18,14 @@ require_once __DIR__ . '/includes/persistence/source/bpmonline-integration.php';
 require_once __DIR__ . '/includes/settings/bpmonline-formidableforms-mapping.php';
 
 
-register_activation_hook( __FILE__, 'bpmonlineplugin_activate' );
+register_activation_hook( __FILE__, 'formidable_bpmonlineplugin_activate' );
 
-function bpmonlineplugin_activate() {
+function formidable_bpmonlineplugin_activate() {
 }
 
-register_uninstall_hook(__FILE__, 'bpmonlineplugin_uninstall');
+register_uninstall_hook(__FILE__, 'formidable_bpmonlineplugin_uninstall');
 
-function bpmonlineplugin_uninstall() {
+function formidable_bpmonlineplugin_uninstall() {
     delete_option('bpmonline_url');
 	delete_option('bpmonline_login');
 	delete_option('bpmonline_authorization');
@@ -120,7 +120,7 @@ function set_custom_limit($fields, $form){
         } ?>
     },
     landingId:<?php echo("\"".$bpmonlinemapping['landingid']."\"");?>,
-    serviceUrl:<?php echo("\"".$bpmOnlineUrl."\"");?>,
+    serviceUrl:<?php echo("\"".$bpmOnlineUrl."\"");?> + "0/ServiceModel/GeneratedObjectWebFormService.svc/SaveWebFormObjectData",
     redirectUrl:""
     };
     landing.initLanding(config);
