@@ -55,8 +55,7 @@ class BPMOnlineEntityStructureBuilder {
 		}
 	}
 
-	private function getFieldsFromSchema($schemaName) {
-		$metadata = $this -> bpmOnlineService -> getMetadata();
+	private function getFieldsFromSchema($schemaName, $metadata) {
 		$schema = $this -> metadataParser -> getEntitySchema($metadata, $schemaName);
 		$fields = $schema -> getColumns();
 		$guidType = "Edm.Guid";
@@ -86,16 +85,17 @@ class BPMOnlineEntityStructureBuilder {
 	}
 
 	private function loadTypes() {
+		$metadata = $this -> bpmOnlineService -> getMetadata();
 		foreach ($this->landingTypes as $landing_type) {
 			$landing_type_name = $landing_type->get_name();
 			$landing_fields = [];
 			if ($landing_type_name == "Event participant") {
 				$landing_fields = $this->get_event_participation_fields();
 			} else if ($landing_type_name == "Case") {
-				$landing_fields = $this->getFieldsFromSchema($landing_type_name);
+				$landing_fields = $this->getFieldsFromSchema($landing_type_name, $metadata);
 				$landing_fields = $this->processCaseFields($landing_fields);
 			} else {
-				$landing_fields = $this->getFieldsFromSchema($landing_type_name);
+				$landing_fields = $this->getFieldsFromSchema($landing_type_name, $metadata);
 			}
 			$landing_type -> setEntitySchemaFields($landing_fields);
 		}

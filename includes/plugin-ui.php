@@ -36,19 +36,12 @@
 			$result = $httpClient->request('POST',$url . "/ServiceModel/AuthService.svc/Login",  $options);
 			$resultBody = (string)$result->getBody();
 			if (strpos($resultBody,"\"Message\":\"Invalid username or password specified.") == false) {
-				/*$licenceurl = 'http://www.licenseengine.com/licenses/a/?action=check_license&item_name=bpmonline-landings.zip&product_id=BpmonlineWordpressIntegration&license='.$licence."&domain=".$_SERVER['SERVER_NAME'];
-				$licenceResult = $httpClient->request('GET',$licenceurl);
-				$licenceResultBody = (string)$licenceResult->getBody();
-				$obj = json_decode($licenceResultBody);
-				if(empty($obj) OR $obj->license!='valid') {
-					echo '<div id="message" class="error"><p><strong>' . __('Invalid license.') . '</strong></p></div>';
-                } else {*/
-					update_option('bpmonline_url', $url);
-					update_option('bpmonline_login', $login);
-					update_option('bpmonline_authorization', $authorization);
-                    update_option('bpmonline_licence', $licence);
-					echo '<div id="message" class="updated fade"><p><strong>' . __('Settings saved.') . '</strong></p></div>';
-                //}
+				update_option('bpmonline_url', $url);
+				update_option('bpmonline_login', $login);
+				update_option('bpmonline_authorization', $authorization);
+                update_option('bpmonline_licence', $licence);
+                bpmonline_refreshcache();
+				echo '<div id="message" class="updated fade"><p><strong>' . __('Settings saved.') . '</strong></p></div>';
             } else {
 				echo '<div id="message" class="error"><p><strong>' . __('Incorrect bpm\'online credentails.') . '</strong></p></div>';
             }
@@ -56,6 +49,28 @@
 			echo '<div id="message" class="error"><p><strong>' . __('Incorrect bpm\'online credentails.') . '</strong></p></div>';
 		}
 	}
+
+	function bpmonline_refreshcache() {
+	    $url = get_option('bpmonline_url');
+	    $authorization = get_option('bpmonline_authorization');
+		delete_option('bpmonline_metadata');
+		$bpmOnlineService = new BPMOnlineService($url,  $authorization);
+		$metadata = $bpmOnlineService -> getMetadata();
+		$serializedMetadata = $metadata->saveXML();
+		$length = strlen ( $serializedMetadata);
+		$compressedMetadData = gzcompress($serializedMetadata);
+		$compressedLength = strlen($compressedMetadData);
+		update_option('bpmonline_metadata',$compressedMetadData);
+		delete_option('bpmonline_landingpagestypes');
+		$landingPagesTypes = $bpmOnlineService -> getLandingsPagesTypes();
+		$landingPagesTypesSerialized = maybe_serialize($landingPagesTypes);
+		update_option('bpmonline_landingpagestypes', $landingPagesTypesSerialized);
+		delete_option('bpmonline_landings');
+		$landings = $bpmOnlineService -> getLandings();
+		$landingsSerialized = maybe_serialize($landings);
+		update_option('bpmonline_landings', $landingsSerialized);
+    }
+
 ?>
 		<div id="<?php echo $P?>" class="wrap metabox-holder">
             <div id="poststuff">
@@ -90,6 +105,11 @@
 
                     <div class="buttons">
                         <input type="submit" id="submit" name="submit" class="button button-primary" value="Save" />
+                        <?php if(get_option('bpmonline_authorization')) { ?>
+                            <button id="refreshCache" name="refreshCache" class="button">
+                                Refresh cache
+                            </button>
+                        <?php } ?>
                     </div>
 
                 </form>

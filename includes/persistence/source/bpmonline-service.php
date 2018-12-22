@@ -70,26 +70,38 @@ class BPMOnlineService
 	#region Methods: Public
 
 	public function getLandingsPagesTypes() {
-		$entries = $this -> getCollection('LandingTypeCollection', "");
-		$landingTypes = [];
-		foreach ($entries as $entry) {
-			array_push($landingTypes, new LandingType($entry));
+		$landingsTypeOption = get_option('bpmonline_landingpagestypes');
+		if ($landingsTypeOption !== null && $landingsTypeOption !== false) {
+			$landingsTypeOptionDeserialized = maybe_unserialize($landingsTypeOption);
+			return $landingsTypeOptionDeserialized;
+		} else {
+			$entries = $this -> getCollection('LandingTypeCollection', "");
+			$landingTypes = [];
+			foreach ($entries as $entry) {
+				array_push($landingTypes, new LandingType($entry));
+			}
+			return $landingTypes;
 		}
-		return $landingTypes;
 	}
 
 	public function getLandings() {
-		$entries = $this -> getCollection('GeneratedWebFormCollection', "");
-		$landingTypes = [];
-		foreach ($entries as $entry) {
-			array_push($landingTypes, new LandingPage($entry));
+		$landings = get_option('bpmonline_landings');
+		if ($landings !== null && $landings !== false) {
+			 $landingsDeserialized = maybe_unserialize($landings);
+			 return $landingsDeserialized;
+		} else {
+			$entries = $this -> getCollection('GeneratedWebFormCollection', "");
+			$landingTypes = [];
+			foreach ($entries as $entry) {
+				array_push($landingTypes, new LandingPage($entry));
+			}
+			return $landingTypes;
 		}
-		return $landingTypes;
 	}
 
 	public function getLandingObjectFields($objectName) {
 		$fields = [];
-		$metadata = $this -> service -> sendRequest('GET', '$metadata');
+		$metadata = $this->getMetadata();
 		foreach ($metadata->getElementsByTagName("EntityType") as $entityType) {
 			if ($entityType -> getAttribute("Name")=== $objectName) {
 				foreach ($entityType -> getElementsByTagName("Property") as $property) {
@@ -107,6 +119,13 @@ class BPMOnlineService
 	}
 
 	public function getMetadata() {
+		$metadata = get_option("bpmonline_metadata");
+		if ($metadata !== null && $metadata !== false) {
+			$uncompressedMetadata = gzuncompress($metadata);
+			$dom = new DOMDocument();
+			$dom->loadHTML($uncompressedMetadata);
+			return $dom;
+		}
 		return $this -> service -> sendRequest('GET', '$metadata');
 	}
 
@@ -124,6 +143,7 @@ class BPMOnlineService
 				array_push($result, $lookupCollection);
 			}
 		}
+
 		return $result;
 	}
 
