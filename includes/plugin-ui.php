@@ -50,26 +50,7 @@
 		}
 	}
 
-	function bpmonline_refreshcache() {
-	    $url = get_option('bpmonline_url');
-	    $authorization = get_option('bpmonline_authorization');
-		delete_option('bpmonline_metadata');
-		$bpmOnlineService = new BPMOnlineService($url,  $authorization);
-		$metadata = $bpmOnlineService -> getMetadata();
-		$serializedMetadata = $metadata->saveXML();
-		$length = strlen ( $serializedMetadata);
-		$compressedMetadData = gzcompress($serializedMetadata);
-		$compressedLength = strlen($compressedMetadData);
-		update_option('bpmonline_metadata',$compressedMetadData);
-		delete_option('bpmonline_landingpagestypes');
-		$landingPagesTypes = $bpmOnlineService -> getLandingsPagesTypes();
-		$landingPagesTypesSerialized = maybe_serialize($landingPagesTypes);
-		update_option('bpmonline_landingpagestypes', $landingPagesTypesSerialized);
-		delete_option('bpmonline_landings');
-		$landings = $bpmOnlineService -> getLandings();
-		$landingsSerialized = maybe_serialize($landings);
-		update_option('bpmonline_landings', $landingsSerialized);
-    }
+
 
 ?>
 		<div id="<?php echo $P?>" class="wrap metabox-holder">
@@ -106,9 +87,9 @@
                     <div class="buttons">
                         <input type="submit" id="submit" name="submit" class="button button-primary" value="Save" />
                         <?php if(get_option('bpmonline_authorization')) { ?>
-                            <button id="refreshCache" name="refreshCache" class="button">
+                            <div id="refreshCache" name="refreshCache" class="button" onclick="wp.ajax.post('bpmonlineRefreshCache').done(function(response){debugger;jQuery('#message').html(response);});">
                                 Refresh cache
-                            </button>
+                            </div>
                         <?php } ?>
                     </div>
 

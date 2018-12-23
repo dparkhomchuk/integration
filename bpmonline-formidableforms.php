@@ -227,5 +227,31 @@ function bpmonline_get_is_licence_valid() {
 	return $lastCheckValue;
 }
 
+add_action( 'wp_ajax_bpmonlineRefreshCache', 'refresh_bpmonline_cache' );
+
+function refresh_bpmonline_cache() {
+    bpmonline_refreshcache();
+	echo '<div id="message" class="updated fade"><p><strong>' . __('Cache refreshed.') . '</strong></p></div>';
+    wp_die();
+}
+
+function bpmonline_refreshcache() {
+	$url = get_option('bpmonline_url');
+	$authorization = get_option('bpmonline_authorization');
+	delete_option('bpmonline_metadata');
+	$bpmOnlineService = new BPMOnlineService($url,  $authorization);
+	$metadata = $bpmOnlineService -> getMetadata();
+	$serializedMetadata = $metadata->saveXML();
+	$compressedMetadData = gzcompress($serializedMetadata);
+	update_option('bpmonline_metadata',$compressedMetadData);
+	delete_option('bpmonline_landingpagestypes');
+	$landingPagesTypes = $bpmOnlineService -> getLandingsPagesTypes();
+	$landingPagesTypesSerialized = maybe_serialize($landingPagesTypes);
+	update_option('bpmonline_landingpagestypes', $landingPagesTypesSerialized);
+	delete_option('bpmonline_landings');
+	$landings = $bpmOnlineService -> getLandings();
+	$landingsSerialized = maybe_serialize($landings);
+	update_option('bpmonline_landings', $landingsSerialized);
+}
 
 ?>
