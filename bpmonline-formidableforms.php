@@ -129,13 +129,8 @@ function set_custom_limit($fields, $form){
 
 function bpmonline_init() {
 	if(!is_admin()){
-		wp_enqueue_script($handle='frm-bpmonline-integrator', $src=plugin_dir_url(__FILE__). 'js/frm-bpmonline-integrator.js',
-        $deps = array('jquery', 'wp-util'),
-            $ver = false,
-            $in_footer = true);
-		wp_enqueue_script($handle='bpmonline_create_script', $src='https://webtracking-v01.bpmonline.com/JS/create-object.js', $ver=false, $in_footer=true);
-		wp_enqueue_script($handle='bpmonline_track_script', $src='https://webtracking-v01.bpmonline.com/JS/track-cookies.js', $ver=false, $in_footer=true);
 	} else {
+
 		wp_enqueue_script($handle='frm-bpmonline-integrator', $src=plugin_dir_url(__FILE__). 'js/frm-bpmonline-integrator.js',
 			$deps = array('jquery', 'wp-util'),
 			$ver = false,
@@ -146,8 +141,6 @@ function bpmonline_init() {
             $ver = false,
             $in_footer = true);
 		wp_localize_script('bpmonline-integration-tab', 'bpmonline', array( 'siteurl' => get_option('siteurl') ));
-		wp_enqueue_script($handle='bpmonline_create_script', $src='https://webtracking-v01.bpmonline.com/JS/create-object.js', $ver=false, $in_footer=true);
-		wp_enqueue_script($handle='bpmonline_track_script', $src='https://webtracking-v01.bpmonline.com/JS/track-cookies.js', $ver=false, $in_footer=true);
     }
 }
 
@@ -164,27 +157,6 @@ function my_submenu_config(){
 	include_once(dirname(__FILE__).'/includes/plugin-ui.php');
 }
 
-
-function addBpmonlineMappingScript() {
-	?>
-    <div style="display: none;" id="bpmonline_mapping_placeholder">
-
-    </div>
-    <script src="https://webtracking-v01.bpmonline.com/JS/track-cookies.js"></script>
-    <script src="https://webtracking-v01.bpmonline.com/JS/create-object.js"></script>
-    <script type="text/javascript">
-        const rootUrl = "<?php echo(admin_url('admin-ajax.php'))?>";
-        const contactForms = document.getElementsByClassName("wpcf7");
-        function fillSelect(selector, values) {
-            jQuery(selector).each(function(index, element) {
-                jQuery.each(values, function() {
-                    jQuery(element).append(jQuery("<option />").val(this.Id ? this.Id : this).text(this.Name ? this.Name : this));
-                });
-            });
-        }
-    </script>
-    <?php
-}
 
 function bpmonline_get_is_licence_valid() {
 	$lastCheckDateOption = get_option('bpmonline_last_check');
@@ -252,6 +224,99 @@ function bpmonline_refreshcache() {
 	$landings = $bpmOnlineService -> getLandings();
 	$landingsSerialized = maybe_serialize($landings);
 	update_option('bpmonline_landings', $landingsSerialized);
+}
+
+
+add_action('frm_after_create_entry', 'yourfunctionname', 30, 2);
+function yourfunctionname($entry_id, $form_id){
+	$settings = get_option($form_id.'_bpmonlineintegration');
+    /*foreach ($_POST['item_meta'] as $key => $value) {
+        $bpmfield = $settings[$key];
+    }*/
+    $landingid = $settings['landingid'];
+	$data = (object) [
+		'formData' => (object) [
+		        'formFieldsData' => (object)['BpmHref' => 'http://localhost', 'Account' => 'Ololo'],
+                'formId' => $landingid,
+        ],
+	];
+
+	$url = "http://localhost:1234/0/ServiceModel/GeneratedObjectWebFormService.svc/SaveWebFormObjectData";
+
+/*//create a new cURL resource
+	$ch = curl_init($url);
+
+//setup request to send json via POST
+
+	$payload = json_encode($data);
+
+//attach encoded JSON string to the POST fields
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+
+//set the content type to application/json
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+
+//return response instead of outputting
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+//execute the POST request
+	$result = curl_exec($ch);
+
+//close cURL resource
+	curl_close($ch);*/
+
+    $args = array(
+	    'method' => 'POST',
+	    'timeout' => 45,
+	    'redirection' => 5,
+	    'httpversion' => '1.0',
+	    'blocking' => true,
+	    'headers' => array('Content-Type' => 'application/json; charset=UTF-8', 'Referer' => 'http://localhost'),
+	    'data_format' => 'body',
+	    'body' => json_encode($data));
+
+	$result = wp_remote_post($url, $args);
+    /*
+    var data = {
+        formData: {
+            formId: mapping.landingId,
+            formFieldsData: []
+        }
+    };
+
+    data.formData.formFieldsData.push({
+        name: 'Id',
+        value: Terrasoft.lastEntityId[landingId]
+    });
+    data.formData.formFieldsData.push({
+        name: 'BpmHref',
+        value: flexGetCookie('bpmHref')
+    });
+    data.formData.formFieldsData.push({
+        name: 'BpmSessionId',
+        value: flexGetCookie('bpmTrackingId')
+    });
+
+     var request = {
+        url: mapping[serviceUrlName],
+        type: 'POST',
+        data: JSON.stringify(data),
+        contentType: "application/json; charset=UTF-8",
+        async: !0,
+        crossDomain: !0,
+        landingId: landingId
+    }
+
+      */
+
+	if($form_id == 5){ //replace 5 with the id of the form
+		$args = array();
+		if(isset($_POST['item_meta'][30])) //replace 30 and 31 with the appropriate field IDs from your form
+			$args['data1'] = $_POST['item_meta'][30]; //change 'data1' to the named parameter to send
+		if(isset($_POST['item_meta'][31]))
+			$args['data2'] = $_POST['item_meta'][31]; //change 'data2' to whatever you need
+		$result = wp_remote_post('http://example.com', array('body' => $args));
+	}
 }
 
 ?>

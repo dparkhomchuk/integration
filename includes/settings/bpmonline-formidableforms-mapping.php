@@ -68,14 +68,14 @@ class BpmonlineFormidableformsMapping
                     <td>
                         <?php if ($selectedMapping == null) {
                             ?>
-                            <select name="<?php echo($form_field->field_key)?>_bpmmapping" data-type=<?php echo(wpc7_editor_get_bpm_type_from_string($form_field->type))?>>
+                            <select name="<?php echo($form_field->id)?>_bpmmapping" data-type=<?php echo(wpc7_editor_get_bpm_type_from_string($form_field->type))?>>
                             </select>
                         <?php } else { ?>
-	                        <select name="<?php echo($form_field->field_key)?>_bpmmapping" data-type=<?php echo(wpc7_editor_get_bpm_type_from_string($form_field->type))?>>
+	                        <select name="<?php echo($form_field->id)?>_bpmmapping" data-type=<?php echo(wpc7_editor_get_bpm_type_from_string($form_field->type))?>>
                                 <?php
                                     $bpmfields = $selectedFields[wpc7_editor_get_bpm_type_from_string($form_field->type)];
                                     foreach ($bpmfields as $bpmfield) {
-                                ?><option value="<?php echo($bpmfield);?>" <?php if($selectedMapping[$form_field->field_key]==$bpmfield) echo("selected=\"selected\""); ?>><?php echo($bpmfield);?> </option>
+                                ?><option value="<?php echo($bpmfield);?>" <?php if($selectedMapping[$form_field->id]==$bpmfield) echo("selected=\"selected\""); ?>><?php echo($bpmfield);?> </option>
                                     <?php }?>
                             </select>
                         <?php }?>
