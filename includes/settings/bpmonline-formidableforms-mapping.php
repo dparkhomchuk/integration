@@ -5,15 +5,45 @@
  * Date: 21.10.2018
  * Time: 20:30
  */
+add_action( 'wp_ajax_loadBpmonlineSettings', 'get_my_new_settings' );
+class BpmonlineFormidableformsMapping {
 
-class BpmonlineFormidableformsMapping
-{
-	public static function get_my_new_settings ($values) {
-		$form_fields = FrmField::getAll('fi.form_id='. (int) $values['id'] ." and fi.type not in ('break', 'divider', 'html', 'captcha', 'form')", 'field_order');
-		$my_form_opts = maybe_unserialize( get_option('frm_mysettings_' . $values['id']) );
+	public static function get_settings_placeholder($values) {
+		?>
+        <div
+             id="bpmonline-settings-panel" aria-labelledby="ui-id-5" role="tabpanel" aria-hidden="true"
+             style="display: block;">
+            <div class="config-error"></div>
+            <h3>Bpm'online</h3>
+            <fieldset id="bpmonline-fieldset">
+                <span>Retrieving data structure from Bpm'online. Please wait it can take around 30 seconds.</span>
+                <p class="description" id="bpmonline-spinner">
+                    <label><span class="spinner is-active" style="float:left"></span></label>
+                </p>
+            </fieldset>
+        </div>
+
+        <script>
+            setTimeout(()=>{
+                wp.ajax.post('loadBpmonlineSettings', {id: <?php echo($values['id']);?>}).done(function(response){
+                    jQuery("#bpmonline-spinner").remove();
+                    jQuery('#bpmonline-fieldset').html(response);
+                }).fail( function(response) {
+                    jQuery("#bpmonline-spinner").remove();
+                    jQuery('#bpmonline-fieldset').html(response);
+                });
+            }, 1000);
+        </script>
+		<?php
+	}
+}
+function get_my_new_settings ($values) {
+    $id = $_POST['id'];
+		$form_fields = FrmField::getAll('fi.form_id='. (int) $id ." and fi.type not in ('break', 'divider', 'html', 'captcha', 'form')", 'field_order');
+		$my_form_opts = maybe_unserialize( get_option('frm_mysettings_' . $id) );
         $bpmOnlineUrl=get_option('bpmonline_url');
 		$bpmOnlineAuthorization = get_option('bpmonline_authorization');
-		$selectedMapping = get_option($values['id']. "_bpmonlineintegration");
+		$selectedMapping = get_option($id. "_bpmonlineintegration");
  		$selectedMappingType = $selectedMapping == null ? null : $selectedMapping['landingtypeid'];
  		$selectedLanding = $selectedMapping == null ? null : $selectedMapping["landingid"];
 		$bpmOnlineService = new BPMOnlineService($bpmOnlineUrl, $bpmOnlineAuthorization);
@@ -89,9 +119,9 @@ class BpmonlineFormidableformsMapping
                 <?php }}
             ?>
 		</table>
-		<?php echo(BpmonlineFormidableformsMapping::wpc7_editor_panel_bpmonline_script($structure_script));
+		<?php echo(wpc7_editor_panel_bpmonline_script($structure_script));
 	}
-	private static function wpc7_editor_panel_bpmonline_script($structure) {
+function wpc7_editor_panel_bpmonline_script($structure) {
 		?>
         <script><?php echo($structure) ?>
 
@@ -130,6 +160,5 @@ class BpmonlineFormidableformsMapping
             }
 
         </script>
-		<?php
-	}
+		<?php wp_die();
 }

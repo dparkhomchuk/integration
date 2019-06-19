@@ -7,7 +7,7 @@
  */
 
 
-add_action( 'wp_ajax_loadBpmonlineSettings', 'loadBpmonlineSettings' );
+
 
 function loadBpmonlineSettings() {
 	$lastCheckValue = bpmonline_get_is_licence_valid();

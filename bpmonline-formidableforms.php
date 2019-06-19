@@ -41,7 +41,7 @@ function frm_add_new_settings_tab( $sections, $values ) {
 	$sections[] = array(
 		'name'		=> 'Bpm\'online fields mapping',
 		'anchor'	=> 'new_tab_name',
-		'function'	=> 'get_my_new_settings',
+		'function'	=> 'get_settings_placeholder',
 		'class'	=> 'BpmonlineFormidableformsMapping'
 	);
 	return $sections;
