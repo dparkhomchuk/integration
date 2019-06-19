@@ -157,7 +157,6 @@ function my_submenu_config(){
 	include_once(dirname(__FILE__).'/includes/plugin-ui.php');
 }
 
-
 function bpmonline_get_is_licence_valid() {
 	$lastCheckDateOption = get_option('bpmonline_last_check');
 	$currentTime = time();
@@ -227,43 +226,28 @@ function bpmonline_refreshcache() {
 }
 
 
-add_action('frm_after_create_entry', 'yourfunctionname', 30, 2);
-function yourfunctionname($entry_id, $form_id){
+add_action('frm_after_create_entry', 'bpmonline_integration_datasend', 30, 2);
+function bpmonline_integration_datasend($entry_id, $form_id){
 	$settings = get_option($form_id.'_bpmonlineintegration');
-    /*foreach ($_POST['item_meta'] as $key => $value) {
-        $bpmfield = $settings[$key];
-    }*/
+	$formFieldsData = [];
+	foreach ($_POST['item_meta'] as $key => $value) {
+	    if ($key > 0) {
+		    $bpmfield = $settings[$key];
+		    $fieldObject = (object)['name'=>$bpmfield, 'value' => $value];
+		    array_push($formFieldsData, $fieldObject);
+        }
+    }
     $landingid = $settings['landingid'];
 	$data = (object) [
 		'formData' => (object) [
-		        'formFieldsData' => (object)['BpmHref' => 'http://localhost', 'Account' => 'Ololo'],
+		        'formFieldsData' => $formFieldsData,
                 'formId' => $landingid,
         ],
 	];
 
-	$url = "http://localhost:1234/0/ServiceModel/GeneratedObjectWebFormService.svc/SaveWebFormObjectData";
+	$bpmUrl = get_option('bpmonline_url');
 
-/*//create a new cURL resource
-	$ch = curl_init($url);
-
-//setup request to send json via POST
-
-	$payload = json_encode($data);
-
-//attach encoded JSON string to the POST fields
-	curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-
-//set the content type to application/json
-	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
-
-//return response instead of outputting
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-//execute the POST request
-	$result = curl_exec($ch);
-
-//close cURL resource
-	curl_close($ch);*/
+	$url = $bpmUrl ."/0/ServiceModel/GeneratedObjectWebFormService.svc/SaveWebFormObjectData";
 
     $args = array(
 	    'method' => 'POST',
@@ -271,52 +255,12 @@ function yourfunctionname($entry_id, $form_id){
 	    'redirection' => 5,
 	    'httpversion' => '1.0',
 	    'blocking' => true,
-	    'headers' => array('Content-Type' => 'application/json; charset=UTF-8', 'Referer' => 'http://localhost'),
+	    'headers' => array('Content-Type' => 'application/json; charset=UTF-8', 'Referer' => getallheaders()['Referer']),
 	    'data_format' => 'body',
 	    'body' => json_encode($data));
 
 	$result = wp_remote_post($url, $args);
-    /*
-    var data = {
-        formData: {
-            formId: mapping.landingId,
-            formFieldsData: []
-        }
-    };
 
-    data.formData.formFieldsData.push({
-        name: 'Id',
-        value: Terrasoft.lastEntityId[landingId]
-    });
-    data.formData.formFieldsData.push({
-        name: 'BpmHref',
-        value: flexGetCookie('bpmHref')
-    });
-    data.formData.formFieldsData.push({
-        name: 'BpmSessionId',
-        value: flexGetCookie('bpmTrackingId')
-    });
-
-     var request = {
-        url: mapping[serviceUrlName],
-        type: 'POST',
-        data: JSON.stringify(data),
-        contentType: "application/json; charset=UTF-8",
-        async: !0,
-        crossDomain: !0,
-        landingId: landingId
-    }
-
-      */
-
-	if($form_id == 5){ //replace 5 with the id of the form
-		$args = array();
-		if(isset($_POST['item_meta'][30])) //replace 30 and 31 with the appropriate field IDs from your form
-			$args['data1'] = $_POST['item_meta'][30]; //change 'data1' to the named parameter to send
-		if(isset($_POST['item_meta'][31]))
-			$args['data2'] = $_POST['item_meta'][31]; //change 'data2' to whatever you need
-		$result = wp_remote_post('http://example.com', array('body' => $args));
-	}
 }
 
 ?>
