@@ -78,13 +78,14 @@ function frm_update_my_form_option( $options, $values ){
 			}
 			$entitySchema                           = $metadataParser->getEntitySchema( $metadata, $shemaName );
 			$lookupValues                           = $service->getLookupValues( $entitySchema, $fields );
+			$bpmonlineintegration_params['mapping_schemaname'] = $shemaName;
 			foreach ($form_fields as $value) {
+				$id = $value -> id;
 				if ($value -> type == "select") {
 				    $mappingKey = $value->id;
 				    $columnName = $bpmonlineintegration_params[$mappingKey];
 				    foreach ($lookupValues as $lookupValue) {
 				        if ($lookupValue -> getName() == $columnName) {
-					        $id = $value -> id;
 					        $values = [];
 					        $entities = $lookupValue->getEntities();
 					        $names = [];
@@ -97,7 +98,7 @@ function frm_update_my_form_option( $options, $values ){
                     }
                 }
                 if ($value -> type == "file") {
-
+	                $bpmonlineintegration_params[$id] = 'File';
                 }
 			}
 			update_option( $_POST['id'] . "_bpmonlineintegration", $bpmonlineintegration_params );
@@ -105,29 +106,6 @@ function frm_update_my_form_option( $options, $values ){
 	}
 
 	return $options;
-}
-
-add_action('frm_entries_footer_scripts', 'set_custom_limit', 20, 2);
-
-function set_custom_limit($fields, $form){
-    $bpmonlinemapping = get_option($form->id . "_bpmonlineintegration");
-	$bpmOnlineUrl           = get_option( 'bpmonline_url' );
-	?>
-    window.bpmonlineMapping = <?php echo json_encode($bpmonlinemapping); ?>;
-    var config = {
-    fields: {
-        <?php foreach($bpmonlinemapping as $key=>$value) {
-            if ($key != 'landingid') {
-                echo("\"".$value."\":[id$=\"".$key."\"],");
-            }
-        } ?>
-    },
-    landingId:<?php echo("\"".$bpmonlinemapping['landingid']."\"");?>,
-    serviceUrl:<?php echo("\"".$bpmOnlineUrl."\"");?> + "0/ServiceModel/GeneratedObjectWebFormService.svc/SaveWebFormObjectData",
-    redirectUrl:""
-    };
-    landing.initLanding(config);
-<?php
 }
 
 function bpmonline_init() {
@@ -238,8 +216,13 @@ function bpmonline_integration_datasend($entry_id, $form_id){
 	    if ($key > 0) {
             if(array_key_exists($key, $settings)) {
 	            $bpmfield = $settings[$key];
-	            $fieldObject = (object)['name'=>$bpmfield, 'value' => $value];
-	            array_push($formFieldsData, $fieldObject);
+	            if ($bpmfield != 'File') {
+		            $fieldObject = (object)['name'=>$bpmfield, 'value' => $value];
+		            array_push($formFieldsData, $fieldObject);
+                } else {
+		            $path = get_attached_file($value);
+                    do_action('flex-file-saved', $id, $path);
+                }
             }
         }
         $idObject = (object)['name'=>'Id', 'value' => $id];
@@ -268,6 +251,14 @@ function bpmonline_integration_datasend($entry_id, $form_id){
 	    'body' => json_encode($data));
 
 	$result = wp_remote_post($url, $args);
+
+	$params = array (
+		'integrationId' => $id,
+		'entityName' => $settings['mapping_schemaname'],
+		'url' => get_option('bpmonline_url'),
+		'authorization' => get_option('bpmonline_authorization')
+	);
+	do_action('flex-send-file', $params);
 
 }
 
