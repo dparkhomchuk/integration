@@ -61,6 +61,7 @@ class BpmonlineFormidableformsMapping
             </tr>
             <?php
             foreach ( $form_fields as $form_field ) {
+                if($form_field->type != 'file') {
                 ?> <tr>
                     <td width="150px">
                         <label style="height: 22px; padding-top:2px; padding-bottom:2px;display:inline-block"><?php echo($form_field->name)?></label>
@@ -73,16 +74,19 @@ class BpmonlineFormidableformsMapping
                         <?php } else { ?>
 	                        <select name="<?php echo($form_field->id)?>_bpmmapping" data-type=<?php echo(wpc7_editor_get_bpm_type_from_string($form_field->type))?>>
                                 <?php
-                                    $bpmfields = $selectedFields[wpc7_editor_get_bpm_type_from_string($form_field->type)];
-                                    foreach ($bpmfields as $bpmfield) {
-                                ?><option value="<?php echo($bpmfield);?>" <?php if($selectedMapping[$form_field->id]==$bpmfield) echo("selected=\"selected\""); ?>><?php echo($bpmfield);?> </option>
-                                    <?php }?>
+                                    $fieldType = wpc7_editor_get_bpm_type_from_string($form_field->type);
+                                    $bpmfields = $selectedFields[$fieldType];
+                                    if(array_key_exists($fieldType, $selectedFields))
+                                    {
+                                        foreach ($bpmfields as $bpmfield) {?>
+                                        <option value="<?php echo($bpmfield);?>" <?php if($selectedMapping[$form_field->id]==$bpmfield) echo("selected=\"selected\""); ?>><?php echo($bpmfield);?> </option>
+                                    <?php }}?>
                             </select>
                         <?php }?>
                     </td>
                  </tr>
 
-                <?php }
+                <?php }}
             ?>
 		</table>
 		<?php echo(BpmonlineFormidableformsMapping::wpc7_editor_panel_bpmonline_script($structure_script));

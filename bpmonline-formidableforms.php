@@ -16,7 +16,7 @@ require_once __DIR__ . '/includes/persistence/source/landing-type.php';
 require_once __DIR__ . '/includes/load-bpmonline-settings.php';
 require_once __DIR__ . '/includes/persistence/source/bpmonline-integration.php';
 require_once __DIR__ . '/includes/settings/bpmonline-formidableforms-mapping.php';
-
+require_once __DIR__ . '/files/flexentric-bpmonline-files.php';
 
 register_activation_hook( __FILE__, 'formidable_bpmonlineplugin_activate' );
 
@@ -95,6 +95,9 @@ function frm_update_my_form_option( $options, $values ){
 					        FrmField::update($id, $values);
                         }
                     }
+                }
+                if ($value -> type == "file") {
+
                 }
 			}
 			update_option( $_POST['id'] . "_bpmonlineintegration", $bpmonlineintegration_params );
@@ -230,12 +233,17 @@ add_action('frm_after_create_entry', 'bpmonline_integration_datasend', 30, 2);
 function bpmonline_integration_datasend($entry_id, $form_id){
 	$settings = get_option($form_id.'_bpmonlineintegration');
 	$formFieldsData = [];
+	$id = getGUID();
 	foreach ($_POST['item_meta'] as $key => $value) {
 	    if ($key > 0) {
-		    $bpmfield = $settings[$key];
-		    $fieldObject = (object)['name'=>$bpmfield, 'value' => $value];
-		    array_push($formFieldsData, $fieldObject);
+            if(array_key_exists($key, $settings)) {
+	            $bpmfield = $settings[$key];
+	            $fieldObject = (object)['name'=>$bpmfield, 'value' => $value];
+	            array_push($formFieldsData, $fieldObject);
+            }
         }
+        $idObject = (object)['name'=>'Id', 'value' => $id];
+		array_push($formFieldsData, $idObject);
     }
     $landingid = $settings['landingid'];
 	$data = (object) [
