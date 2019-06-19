@@ -80,7 +80,7 @@ function frm_update_my_form_option( $options, $values ){
 			$lookupValues                           = $service->getLookupValues( $entitySchema, $fields );
 			foreach ($form_fields as $value) {
 				if ($value -> type == "select") {
-				    $mappingKey = $value->field_key;
+				    $mappingKey = $value->id;
 				    $columnName = $bpmonlineintegration_params[$mappingKey];
 				    foreach ($lookupValues as $lookupValue) {
 				        if ($lookupValue -> getName() == $columnName) {
