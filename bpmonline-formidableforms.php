@@ -207,9 +207,9 @@ function bpmonline_refreshcache() {
 }
 
 
-add_action('frm_after_create_entry', 'bpmonline_integration_datasend', 30, 2);
-function bpmonline_integration_datasend($entry_id, $form_id){
-	$settings = get_option($form_id.'_bpmonlineintegration');
+add_action('frm_entries_before_create', 'bpmonline_integration_datasend', 30, 2);
+function bpmonline_integration_datasend($errors, $form){
+	$settings = get_option($form -> id.'_bpmonlineintegration');
 	$formFieldsData = [];
 	$id = getGUID();
 	foreach ($_POST['item_meta'] as $key => $value) {
@@ -239,19 +239,21 @@ function bpmonline_integration_datasend($entry_id, $form_id){
 	$bpmUrl = get_option('bpmonline_url');
 
 	$url = $bpmUrl ."/0/ServiceModel/GeneratedObjectWebFormService.svc/SaveWebFormObjectData";
-
     $args = array(
 	    'method' => 'POST',
 	    'timeout' => 45,
 	    'redirection' => 5,
 	    'httpversion' => '1.0',
 	    'blocking' => true,
-	    'headers' => array('Content-Type' => 'application/json; charset=UTF-8', 'Referer' => getallheaders()['Referer']),
+	    'headers' => array('Content-Type' => 'application/json; charset=UTF-8', 'Referer' => $_SERVER['HTTP_REFERER']),
 	    'data_format' => 'body',
 	    'body' => json_encode($data));
-
 	$result = wp_remote_post($url, $args);
-
+	if ($result['response']['code'] != 200) {
+		wp_send_json_error('Something went wrong. Try again later', 500);
+	}
+	$session = $result['cookies'][0]->value;
+	//$set = setcookie('BPMSESSIONID', $session);
 	$params = array (
 		'integrationId' => $id,
 		'entityName' => $settings['mapping_schemaname'],
