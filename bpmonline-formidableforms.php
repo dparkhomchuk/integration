@@ -253,7 +253,7 @@ function bpmonline_integration_datasend($errors, $form){
 		wp_send_json_error('Something went wrong. Try again later', 500);
 	}
 	$session = $result['cookies'][0]->value;
-	$set = setcookie('BPMSESSIONID', $session);
+	$set = setcookie('BPMSESSIONID', $session, 0, '/',$result['cookies'][0]->domain);
 	$params = array (
 		'integrationId' => $id,
 		'entityName' => $settings['mapping_schemaname'],
