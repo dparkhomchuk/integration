@@ -21,6 +21,26 @@
         }
     }
 
+    function bpmonline_get_licenceurl( $licence) {
+        return 'http://feisty-well-245409.appspot.com/?id='.$licence;
+    }
+
+    function bpmonline_exec_url($httpClient, $url) {
+        try {
+	        $httpClient->request('GET',$url);
+        } catch (Exception $e){
+            if ($e -> getCode() == 500) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function bpmonline_checklicence($httpClient,$licence) {
+        $licenceurl = bpmonline_get_licenceurl($licence);
+        $result = bpmonline_exec_url($httpClient, $licenceurl);
+        return $result;
+    }
     require_once __DIR__ . '/persistence/source/bpmonline-service.php';
 
 	if( isset($_POST['url'])) {
@@ -36,12 +56,17 @@
 			$result = $httpClient->request('POST',$url . "/ServiceModel/AuthService.svc/Login",  $options);
 			$resultBody = (string)$result->getBody();
 			if (strpos($resultBody,"\"Message\":\"Invalid username or password specified.") == false) {
-				update_option('bpmonline_url', $url);
-				update_option('bpmonline_login', $login);
-				update_option('bpmonline_authorization', $authorization);
-                update_option('bpmonline_licence', $licence);
-                bpmonline_refreshcache();
-				echo '<div id="message" class="updated fade"><p><strong>' . __('Settings saved.') . '</strong></p></div>';
+			    if(bpmonline_checklicence($httpClient, $licence)) {
+				    update_option('bpmonline_url', $url);
+				    update_option('bpmonline_login', $login);
+				    update_option('bpmonline_authorization', $authorization);
+				    update_option('bpmonline_licence', $licence);
+				    bpmonline_refreshcache();
+				    echo '<div id="message" class="updated fade"><p><strong>' . __('Settings saved.') . '</strong></p></div>';
+                } else {
+				    echo '<div id="message" class="error"><p><strong>' . __('Invalid license.') . '</strong></p></div>';
+                }
+
             } else {
 				echo '<div id="message" class="error"><p><strong>' . __('Incorrect bpm\'online credentails.') . '</strong></p></div>';
             }

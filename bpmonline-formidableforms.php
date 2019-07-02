@@ -108,8 +108,11 @@ function frm_update_my_form_option( $options, $values ){
 	return $options;
 }
 
+
+
 function bpmonline_init() {
 	if(!is_admin()){
+		wp_enqueue_script('bpmonline_coockie', 'https://webtracking-v01.bpmonline.com/JS/track-cookies.js');
 	} else {
 
 		wp_enqueue_script($handle='frm-bpmonline-integrator', $src=plugin_dir_url(__FILE__). 'js/frm-bpmonline-integrator.js',
@@ -159,17 +162,11 @@ function bpmonline_get_is_licence_valid() {
 	}
 	if ($lastCheckValue == null) {
 		$licence = get_option( 'bpmonline_licence');
-		$url = 'http://www.licenseengine.com/licenses/a/?action=check_license&item_name=bpmonline-landings.zip&product_id=BpmonlineWordpressIntegration&license='.$licence."&domain=".$_SERVER['SERVER_NAME'];
+		$url = 'http://feisty-well-245409.appspot.com/?id='.$licence;
 		try {
 			$httpClient = new \GuzzleHttp\Client(['cookies' => true]);
-			$licenceResult = $httpClient->request('GET', $url);
-			$licenceResultBody = (string)$licenceResult->getBody();
-			$obj = json_decode($licenceResultBody);
-			if($obj!=null && $obj->license=='valid') {
-				$lastCheckValue = "true";
-			} else {
-				$lastCheckValue = "false";
-			}
+			$httpClient->request('GET', $url);
+			$lastCheckValue = "true";
         } catch (\Exception $ex) {
 			$lastCheckValue = "false";
         }
@@ -207,8 +204,24 @@ function bpmonline_refreshcache() {
 }
 
 
+function bpmonlineExtractDomain($url) {
+	if (strrpos($url, "://") != false ) {
+		$domain = explode("/", $url)[2];
+	} else {
+		$domain = explode("/", $url)[0];
+	}
+	$domain = explode("/", $domain)[0];
+	if (substr($domain, 0, 4) === "www.") {
+		$domain = substr($domain, 4, strlen($domain));
+	}
+	return $domain;
+}
+
 add_action('frm_entries_before_create', 'bpmonline_integration_datasend', 30, 2);
 function bpmonline_integration_datasend($errors, $form){
+	if (bpmonline_get_is_licence_valid() == 'false') {
+		return;
+	}
 	$settings = get_option($form -> id.'_bpmonlineintegration');
 	$formFieldsData = [];
 	$id = getGUID();
@@ -253,7 +266,7 @@ function bpmonline_integration_datasend($errors, $form){
 		wp_send_json_error('Something went wrong. Try again later', 500);
 	}
 	$session = $result['cookies'][0]->value;
-	$set = setcookie('BPMSESSIONID', $session, 0, '/',$result['cookies'][0]->domain);
+	$set = setcookie('bpmTrackingId', $session, 0, '/',bpmonlineExtractDomain($result['cookies'][0]));
 	$params = array (
 		'integrationId' => $id,
 		'entityName' => $settings['mapping_schemaname'],
